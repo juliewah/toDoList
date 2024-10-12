@@ -54,6 +54,13 @@ function showData(){
     renderTaskList(tasks);
 }
 
+function deleteTask(taskID){
+    let tasks = getTasks();
+    tasks = tasks.filter((el) => el.id !== parseInt(taskID));
+    saveTasks(tasks);
+    renderTaskList(tasks);
+}
+
 addBtn.addEventListener("click", addTask);
 
 // 按enter也可以新增
@@ -72,15 +79,7 @@ taskList.addEventListener("click", (event) => {
     const targetName = event.target.nodeName;
     if(targetName == 'I'){
         let taskID = event.target.parentNode.getAttribute("data-id");
-        let tasks = getTasks();
-        tasks = tasks.filter((el) => el.id !== parseInt(taskID));
-        saveTasks(tasks);
-
-        event.target.parentNode.remove(); // 刪除父層
-
-        if(tasks.length == 0){
-            noData.style.display = "block";
-        }
+        deleteTask(taskID);
     }
 })
 
