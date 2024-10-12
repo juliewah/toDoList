@@ -1,69 +1,64 @@
 const addBtn = document.querySelector("#addBtn");
 const taskInput = document.querySelector("#taskInput");
 const taskList = document.querySelector(".todo-list");
-const deleteAllBtn = document.querySelector("#deleteAll");
 const noData = document.querySelector(".noData");
 
 const TASKS_KEY = "tasks";
+
+function getTasks(){
+    return JSON.parse(localStorage.getItem(TASKS_KEY)) || []
+}
+
+function saveTasks(task){
+    localStorage.setItem(TASKS_KEY, JSON.stringify(task));
+}
+// 渲染單個任務
+function renderTask(task){
+    return `<li class='todo-item' data-id='${task.id}'>
+        <span class='textItem'>${task.text}</span>
+        <span class='dateItem'>上次編輯時間：${task.date}</span>
+        <i class='fa-solid fa-trash'></i></li>`;
+}
+// 渲染任務列表
+function renderTaskList(tasks){
+    taskList.innerHTML = tasks.map(task => renderTask(task)).join('');
+    noData.style.display = tasks.length > 0 ? "none":"block";
+}
 
 function addTask(){
     const date = new Date();
     const dataId = Date.now();
     // 判斷不為空 去除空白
     if(taskInput.value.trim() != ""){
-        let taskContent = `<li class='todo-item' data-id='${dataId}'>
-        <span class='textItem'>${taskInput.value}</span>
-        <span class='dateItem'>上次編輯時間：${date.toLocaleString()}</span>
-        <i class='fa-solid fa-trash'></i></li>`;
-
-        taskList.insertAdjacentHTML("afterbegin", taskContent);
-
-        // 存入localStorage
-        let previousTask = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
-        previousTask.unshift({
+        let newTask = {
             "id": dataId,
             "text": taskInput.value,
             "date": date.toLocaleString()
-        });
-        localStorage.setItem(TASKS_KEY, JSON.stringify(previousTask));
+        };
+
+        // 存入localStorage
+        let tasks = getTasks();
+        tasks.unshift(newTask);
+        saveTasks(tasks);
+        renderTaskList(tasks);
     } else {
         alert("請輸入內容");
     }
     taskInput.value = ''; // 輸入完後讓輸入框空白
     taskInput.focus(); // 輸入框 focus
-    noData.style.display = "none";
 }
 
 function showData(){
     //顯示歷史資料
-    const tasks = localStorage.getItem(TASKS_KEY);
-    if (tasks != "[]" && tasks != null){
-        let t = '';
-        JSON.parse(tasks).forEach(element => {
-            t += `<li class='todo-item' data-id='${element.id}'>
-            <span class='textItem'>${element.text}</span>
-            <span class ='dateItem'>上次編輯時間：${element.date}</span>
-            <i class='fa-solid fa-trash'></i>
-            </li>`
-        });
-        taskList.insertAdjacentHTML("afterbegin", t);
-    } else {
-        noData.style.display = "block";
-    }
-}
-
-function deleteAll(){
-    taskList.innerHTML = '';
-    localStorage.clear();
-    showData();
+    const tasks = getTasks();
+    renderTaskList(tasks);
 }
 
 addBtn.addEventListener("click", addTask);
-deleteAllBtn.addEventListener("click", deleteAll);
 
 // 按enter也可以新增
 taskInput.addEventListener("keyup", (event) => {
-    if(event.code == 'Enter'){
+    if(event.key == 'Enter'){
         addTask();
     }
 })
@@ -77,9 +72,9 @@ taskList.addEventListener("click", (event) => {
     const targetName = event.target.nodeName;
     if(targetName == 'I'){
         let taskID = event.target.parentNode.getAttribute("data-id");
-        let tasks = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
+        let tasks = getTasks();
         tasks = tasks.filter((el) => el.id !== parseInt(taskID));
-        localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
+        saveTasks(tasks);
 
         event.target.parentNode.remove(); // 刪除父層
 
